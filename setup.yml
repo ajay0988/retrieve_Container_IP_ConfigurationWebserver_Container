@@ -1,0 +1,22 @@
+
+          
+          
+         
+- name: "Configure the docker container as webserver"
+  hosts: docker
+  
+  tasks:
+    - name: "Installing httpd s/w in docker container"
+      package:
+        name: "httpd"
+        state: present
+    - name: "copying webpage"
+      copy: 
+       src: "index.html"
+       dest: /var/www/html
+    - name: "starting the web service"
+      command: /usr/sbin/httpd
+      register: z
+    - debug:
+       var: z
+

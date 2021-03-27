@@ -1,0 +1,45 @@
+- name: Update the inventory for docker container
+  hosts: localhost
+  vars_prompt:
+          - name: cont_name
+            prompt: "Please tell your name of container "
+            private: no
+          - name: "dock_image"
+            prompt: "Tell me the name your docker image"
+            private: no
+          - name: port_no
+            prompt: "At which port number of docker host you want to run this container"
+            private: no
+
+
+          
+  tasks:
+          - name: Installing docker-py python library
+            block:
+              - command: pip3 show docker-py
+            rescue:
+             - pip:
+                name: docker-py
+          - name: launch the conatiner for hosting the webpage
+            docker_container:
+             name: "{{ cont_name }}"
+             image: "{{ dock_image }}"
+             state: started
+             ports:
+              - "{{ port_no }}:80"  
+          - shell: docker inspect -f {{" '{{.NetworkSettings.IPAddress }}' "}} $(docker ps -q) 
+            register: x
+          
+          
+         
+          - name: Update Inventory file
+            blockinfile:
+                     path: /etc/ansible/hosts
+                     block: |
+                             [docker]
+                             {{ x['stdout'] }} ansible_ssh_user=root ansible_ssh_pass=ajay  ansible_connection=ssh
+
+            register: y
+          - debug:
+                   var: y
+          
